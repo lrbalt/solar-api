@@ -3,6 +3,13 @@ authors = ["Reinier Balt <lrbalt@gmail.com>"]
 edition = "2021"
 name = "solar-api"
 version = "0.1.0"
+description = "Rust library for accessing the SolarEdge Monitoring API"
+repository = "https://github.com/lrbalt/solar-api"
+documentation = "https://docs.rs/solar-api"
+keywords = ["solaredge"]
+categories = ["api-bindings"]
+license = "MIT"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
