@@ -1,3 +1,25 @@
+//! # Solar API
+//! Rust library for accessing the Solar Edge API. This library uses the API documentation found [here](https://knowledge-center.solaredge.com/en/search?search=api&sort_by=search_api_relevance)
+//!
+//! # API Key and Site ID
+//! To access the data of your installation, you need to get an API key. You can get this from the SolardEdge Monitoring Portal. Log in with your SolarEdge Account, go to the Admin section, Site Access tab and activate API access. Mark the checkbox and you will see the API Key and Site ID
+//!
+//! # Rate limited
+//! Please be aware that the API is rate limited, i.e. it will block requests after reaching a maximum of requests in an hour. It will be available again after that hour. Also note that the measurements seem to be limited to one per fifteen minutes. You can consider scheduling a read of data ±15 minutes after the timestamp of last read measurement. For example you can use a duration of 15m 10s:
+//!
+//! ```rust
+//! let next_update = last_updated_datetime + Duration::seconds(15 * 60 + 10);
+//! ```
+//!
+//! There is a convenience method to help with this:
+//! ```rust
+//! let site_overview: Overview = overview(api_key, site_id);
+//! let (next_update, duration_from_now) = site_overview.estimated_next_update();
+//!
+//! // wait duration_from_now or set timeout at next_update before
+//! // getting power or energy data
+//! ```
+
 mod site;
 
 use chrono::NaiveDateTime;
@@ -6,8 +28,14 @@ use reqwest::StatusCode;
 use std::collections::HashMap;
 use thiserror::Error;
 
-pub use site::{DataPeriod, GeneratedEnergy, GeneratedPowerPerTimeUnit, Overview, Site, TimeUnit};
+pub use site::{
+    DataPeriod, GeneratedEnergy, GeneratedEnergyValue, GeneratedPower, GeneratedPowerPerTimeUnit,
+    GeneratedPowerValue, Location, Overview, PrimaryModule, PublicSettings, Site, TimeData,
+    TimeUnit,
+};
 
+/// Possible errors that this lib can return. The underlying errors are included,
+/// either being [`request::Error``] or [`serde_json::Error`]
 #[derive(Error, Debug)]
 pub enum SolarApiError {
     #[error("Could not retrieve data from SolarEdge Monitoring API")]
@@ -68,6 +96,8 @@ fn call_url(url: &str) -> Result<String, reqwest::Error> {
     Ok(reply_text)
 }
 
+/// List all sites of customer. Each [`Site`] has an id that can be
+/// used to retrieve detailled information using for example [`energy`]
 pub fn list(api_key: &str) -> Result<Vec<site::Site>, SolarApiError> {
     debug!("Calling list of sites");
     let map = default_map(api_key);
@@ -80,6 +110,7 @@ pub fn list(api_key: &str) -> Result<Vec<site::Site>, SolarApiError> {
     Ok((*reply.sites()).clone())
 }
 
+/// Displays the site details, such as name, location, status, etc.
 pub fn details(api_key: &str, site_id: u32) -> Result<site::Site, SolarApiError> {
     debug!("Getting details of {site_id}");
     let params = default_map(api_key);
@@ -93,6 +124,7 @@ pub fn details(api_key: &str, site_id: u32) -> Result<site::Site, SolarApiError>
     Ok(site.details)
 }
 
+/// Return the energy production start and end dates of the site
 pub fn data_period(api_key: &str, site_id: u32) -> Result<site::DataPeriod, SolarApiError> {
     debug!("Getting data_period of {site_id}");
     let params = default_map(api_key);
@@ -106,6 +138,7 @@ pub fn data_period(api_key: &str, site_id: u32) -> Result<site::DataPeriod, Sola
     Ok(period.data_period)
 }
 
+/// Display the site overview data.
 pub fn overview(api_key: &str, site_id: u32) -> Result<site::Overview, SolarApiError> {
     debug!("Getting overview of {}", site_id);
     let params = default_map(api_key);
@@ -119,6 +152,12 @@ pub fn overview(api_key: &str, site_id: u32) -> Result<site::Overview, SolarApiE
     Ok(overview.overview)
 }
 
+/// Return the site energy measurements. Usage limitation: This API is limited
+/// to one year when using `time_unit=`[`TimeUnit::Day`] (i.e., daily resolution)
+/// and to one month when using `time_unit=`[`TimeUnit::QuarterOfAnHour`] or
+/// `time_unit=`[`TimeUnit::Hour`]`. This means that the period between
+/// `period.end_time` and `period.start_time` should not exceed one year or one
+/// month respectively. If the period is longer, the system will generate error
 pub fn energy(
     api_key: &str,
     site_id: u32,
@@ -146,6 +185,10 @@ pub fn energy(
     Ok(energy.energy)
 }
 
+/// Return the site power measurements in 15 minutes resolution. This API is 
+/// limited to one-month period. This means that the period between `end_datetime`
+/// and `start_datetime` should not exceed one month. If the period is longer, 
+/// the system will generate error .
 pub fn power(
     api_key: &str,
     site_id: u32,

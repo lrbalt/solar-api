@@ -33,30 +33,41 @@ pub struct SiteDetails {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Site {
+    /// the site id
     pub id: u32,
+    /// the site name
     pub name: String,
+    /// the account this site belongs to
     #[serde(rename = "accountId")]
     pub account_id: u32,
+    /// the site status
     pub status: String,
+    /// site peak power
     #[serde(rename = "peakPower", deserialize_with = "parse_power_kw")]
     pub peak_power: Power,
     #[serde(rename = "lastUpdateTime", deserialize_with = "parse_date")]
     pub last_update_time: chrono::NaiveDate,
+    /// site installation date
     #[serde(rename = "installationDate", deserialize_with = "parse_date")]
-    pub installation_date: chrono::NaiveDate, // site installation date (format: yyyy-MM-DD hh:mm:ss )
+    pub installation_date: chrono::NaiveDate, 
+    /// permission to operate date
     #[serde(rename = "ptoDate")]
     pub pto_date: Option<String>,
     pub notes: String,
+    /// site type
     #[serde(rename = "type")]
     pub site_type: String,
+    /// includes country, state, city, address, secondary address, time zone and zip
     pub location: Location,
     #[serde(rename = "primaryModule")]
     pub primary_module: PrimaryModule,
     pub uris: HashMap<String, String>,
+    ///  includes if this site is public and its public name
     #[serde(rename = "publicSettings")]
     pub public_settings: PublicSettings,
 }
 
+/// Location of a site
 #[derive(Debug, Clone, Deserialize)]
 pub struct Location {
     pub country: String,
@@ -69,6 +80,7 @@ pub struct Location {
     pub country_code: String,
 }
 
+/// The information about the model of the primary module of the site
 #[derive(Debug, Clone, Deserialize)]
 pub struct PrimaryModule {
     #[serde(rename = "manufacturerName")]
@@ -80,12 +92,15 @@ pub struct PrimaryModule {
     #[serde(rename = "temperatureCoef")]
     pub temperature_coef: f32,
 }
+
+/// Setting showing if information about this site is public
 #[derive(Debug, Clone, Deserialize)]
 pub struct PublicSettings {
     #[serde(rename = "isPublic")]
     pub public: bool,
 }
 
+/// The period defined by start_date and end_date that this site is producting energy
 #[derive(Debug, Clone, Deserialize)]
 pub struct DataPeriod {
     #[serde(rename = "startDate", deserialize_with = "parse_date")]
@@ -95,10 +110,14 @@ pub struct DataPeriod {
 }
 
 impl DataPeriod {
+    /// create a formatted [`String`] for the start date 
+    /// in `%Y-%m-%d` format, i.e. `2023-11-9` for november 9th 2023
     pub fn formatted_start_date(&self) -> String {
         Self::formatted_date(&self.start_date)
     }
 
+    /// create a formatted [`String`] for the end date 
+    /// in `%Y-%m-%d` format, i.e. `2023-11-9` for november 9th 2023
     pub fn formatted_end_date(&self) -> String {
         Self::formatted_date(&self.end_date)
     }
@@ -119,6 +138,7 @@ pub(crate) struct OverviewReply {
     pub(crate) overview: Overview,
 }
 
+/// The overview of a site includes the site current power, daily energy, monthly energy, yearly energy and life time energy.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Overview {
     #[serde(rename = "lastUpdateTime", deserialize_with = "parse_date_time")]
@@ -138,6 +158,9 @@ pub struct Overview {
 }
 
 impl Overview {
+    /// Calculates the next timestamp and the duration from now when new data 
+    /// should be available on the API. It uses `last_update_time` and 15 
+    /// minutes and 10 seconds as delta between updates
     pub fn estimated_next_update(&self) -> (chrono::NaiveDateTime, chrono::Duration) {
         // add 10s extra time
         let next = self.last_updated_time + chrono::Duration::seconds(REFRESH_TIME_IN_M * 60 + 10);
@@ -146,12 +169,15 @@ impl Overview {
     }
 }
 
+/// Amount of [`Energy`] and optional the revenue of this energy
 #[derive(Debug, Clone, Deserialize)]
 pub struct TimeData {
     #[serde(deserialize_with = "parse_energy_wh")]
     pub energy: Energy,
     pub revenue: Option<f32>,
 }
+
+/// Generated power
 #[derive(Debug, Clone, Deserialize)]
 pub struct GeneratedPower {
     #[serde(deserialize_with = "parse_power_kw")]
@@ -209,15 +235,17 @@ pub(crate) struct GeneratedEnergyReply {
     pub(crate) energy: GeneratedEnergy,
 }
 
+/// Contains all values of the generated energy per time unit
 #[derive(Debug, Clone, Deserialize)]
 pub struct GeneratedEnergy {
     #[serde(rename = "timeUnit", deserialize_with = "TimeUnit::from_const")]
     pub time_unit: TimeUnit,
-    pub unit: String,
+    unit: String,
     values: Vec<RawGeneratedEnergyValue>,
 }
 
 impl GeneratedEnergy {
+    /// returns the timestamped energy values
     pub fn values(&self) -> Vec<GeneratedEnergyValue> {
         self.values
             .iter()
@@ -226,14 +254,19 @@ impl GeneratedEnergy {
     }
 }
 
+// struct used to parse reply from API. Can be converted to 
+//[`GeneratedEnergyValue`] to contain correct unit of measurement 
+// using the unit value returned by [`GeneratedEnergy`]
 #[derive(Debug, Clone, Deserialize, Copy)]
-pub struct RawGeneratedEnergyValue {
+struct RawGeneratedEnergyValue {
     #[serde(deserialize_with = "parse_date_time")]
-    pub date: chrono::NaiveDateTime,
-    pub value: Option<f64>,
+    date: chrono::NaiveDateTime,
+    value: Option<f64>,
 }
 
 impl RawGeneratedEnergyValue {
+    // converts f64 value to [`Energy`] using supplied `unit`. 
+    // Currenty only `Wh` is supported
     fn convert(&self, unit: &str) -> GeneratedEnergyValue {
         let value = match unit {
             "Wh" => self.value.map(Energy::new::<watt_hour>),
@@ -246,26 +279,34 @@ impl RawGeneratedEnergyValue {
     }
 }
 
+/// A timestamped [`Energy`] value. The value may be None when there wasn't a 
+/// value at that timestamp
 #[derive(Debug, Clone, Copy)]
 pub struct GeneratedEnergyValue {
+    /// timestamp of value
     pub date: chrono::NaiveDateTime,
+    /// the value measures at the timestamp or None if there wasn't a value at
+    /// that timestamp
     pub value: Option<Energy>,
 }
 
+// struct used to parse the API reply for Power
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct GeneratedPowerReply {
     pub(crate) power: GeneratedPowerPerTimeUnit,
 }
 
+/// Contains all values of the generated power per time unit
 #[derive(Debug, Clone, Deserialize)]
 pub struct GeneratedPowerPerTimeUnit {
     #[serde(rename = "timeUnit", deserialize_with = "TimeUnit::from_const")]
     pub time_unit: TimeUnit,
-    pub unit: String,
+    unit: String,
     values: Vec<RawGeneratedPowerValue>,
 }
 
 impl GeneratedPowerPerTimeUnit {
+    /// returns all Power values that were present in the time period
     pub fn values(&self) -> Vec<GeneratedPowerValue> {
         self.values
             .iter()
@@ -275,13 +316,15 @@ impl GeneratedPowerPerTimeUnit {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct RawGeneratedPowerValue {
+struct RawGeneratedPowerValue {
     #[serde(deserialize_with = "parse_date_time")]
-    pub date: chrono::NaiveDateTime,
+    date: chrono::NaiveDateTime,
     value: Option<f64>,
 }
 
 impl RawGeneratedPowerValue {
+    // converts f64 value to [`Power`] using supplied `unit`. 
+    // Currenty only `W` is supported
     pub fn convert(&self, unit: &str) -> GeneratedPowerValue {
         let value: Option<Power> = match unit {
             "W" => self.value.map(Power::new::<watt>),
@@ -294,12 +337,15 @@ impl RawGeneratedPowerValue {
     }
 }
 
+/// A timestamped [`Power`] value. The value may be None when there wasn't a 
+/// value at that timestamp
 #[derive(Debug, Clone)]
 pub struct GeneratedPowerValue {
     pub date: chrono::NaiveDateTime,
     pub value: Option<Power>,
 }
 
+// parse a datetime value that the API returned to a [`NaiveDateTime`]
 fn parse_date_time<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
 where
     D: Deserializer<'de>,
@@ -309,6 +355,7 @@ where
         .map_err(|_| serde::de::Error::custom("Cannot parse value"))
 }
 
+// parse a datetime value that the API returned to a [`NaiveDate`]
 fn parse_date<'de, D>(deserializer: D) -> Result<chrono::NaiveDate, D::Error>
 where
     D: Deserializer<'de>,
@@ -318,6 +365,7 @@ where
         .map_err(|_| serde::de::Error::custom("Cannot parse value"))
 }
 
+// parse a float value that the API returned to a [`Power`] value. Assumes the value is in kilowatt
 fn parse_power_kw<'de, D>(deserializer: D) -> Result<Power, D::Error>
 where
     D: Deserializer<'de>,
@@ -326,6 +374,7 @@ where
     Ok(Power::new::<kilowatt>(value))
 }
 
+// parse a float value that the API returned to a [`Energy`] value. Assumes the value is in watt-hours
 fn parse_energy_wh<'de, D>(deserializer: D) -> Result<Energy, D::Error>
 where
     D: Deserializer<'de>,
