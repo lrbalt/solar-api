@@ -1,5 +1,5 @@
 # Solar API
-Rust library for accessing the Solar Edge API. This library uses the API documentation found here: https://knowledge-center.solaredge.com/en/search?search=api&sort_by=search_api_relevance
+Rust library for accessing the Solar Edge API. This library uses the API documentation found [here](https://knowledge-center.solaredge.com/en/search?search=api&sort_by=search_api_relevance)
 
 # API Key and Site ID
 To access the data of your installation, you need to get an API key. You can get this from the SolardEdge Monitoring Portal. Log in with your SolarEdge Account, go to the Admin section, Site Access tab and activate API access. Mark the checkbox and you will see the API Key and Site ID
@@ -35,37 +35,37 @@ RUST_LOG=solar_api=trace cargo run --example use_api -- <API_KEY> <SITE_ID>
 
 # Status
 * Site Data API
-** [x] Site List
-** [x] Site Details
-** [x] Site Data: Start and End Dates
-** [ ] Site Data: Bulk Version
-** [x] Site Energy
-** [ ] Site Energy: Bulk Version 
-** [x] Site Energy – Time Period
-** [ ] Site Energy – Time Period: Bulk Version
-** [x] Site Power
-** [ ]Site Power: Bulk version
-** [x] Site Overview
-** [ ] Site Overview: Bulk Version
-** [ ] Site Power - Detailed
-** [ ] Site Energy - Detailed
-** [ ] Site Power Flow
-** [ ] Storage Information
-** [ ] Site Image
-** [ ] Site Environmental Benefits
-** [ ] Installer Logo Image
+    * [x] Site List
+    * [x] Site Details
+    * [x] Site Data: Start and End Dates
+    * [ ] Site Data: Bulk Version
+    * [x] Site Energy
+    * [ ] Site Energy: Bulk Version 
+    * [x] Site Energy – Time Period
+    * [ ] Site Energy – Time Period: Bulk Version
+    * [x] Site Power
+    * [ ]Site Power: Bulk version
+    * [x] Site Overview
+    * [ ] Site Overview: Bulk Version
+    * [ ] Site Power - Detailed
+    * [ ] Site Energy - Detailed
+    * [ ] Site Power Flow
+    * [ ] Storage Information
+    * [ ] Site Image
+    * [ ] Site Environmental Benefits
+    * [ ] Installer Logo Image
 * Site Equipment API
-** [ ] Components List
-** [ ] Inventory
-** [ ] Inverter Technical Data
-** [ ] Equipment Change Log
+    * [ ] Components List
+    * [ ] Inventory
+    * [ ] Inverter Technical Data
+    * [ ] Equipment Change Log
 * [ ] Account List API
 * Meters API
-** [ ] Get Meters Data
+    * [ ] Get Meters Data
 * Sensors API
-** [ ] Get Sensor List
-** [ ] Get Sensor Data
+    * [ ] Get Sensor List
+    * [ ] Get Sensor Data
 * Data Types
-** [x] Time Unit
-** [ ] Site Status
-** [ ] Site Type
+    * [x] Time Unit
+    * [ ] Site Status
+    * [ ] Site Type
