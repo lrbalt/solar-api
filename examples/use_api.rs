@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Getting overview of site {site_id}");
     let overview = overview(api_key, site_id)?;
     println!(
-        "Site generated {:.2} and today {:.2}",
+        "Site generated {:.2} since installation and is currently generating {:.2}",
         overview
             .life_time_data
             .energy
@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         overview
             .current_power
             .power
-            .into_format_args(kilowatt, DisplayStyle::Description)
+            .into_format_args(watt, DisplayStyle::Description)
     );
 
     println!("Getting energy generation of past day");

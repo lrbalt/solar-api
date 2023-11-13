@@ -152,7 +152,7 @@ pub struct Overview {
     #[serde(rename = "lastDayData")]
     pub last_day_data: TimeData,
     #[serde(rename = "currentPower")]
-    pub current_power: GeneratedPower,
+    pub current_power: GeneratedPowerW,
     #[serde(rename = "measuredBy")]
     pub measured_by: String,
 }
@@ -177,10 +177,17 @@ pub struct TimeData {
     pub revenue: Option<f32>,
 }
 
-/// Generated power
+/// Generated power in Kw
 #[derive(Debug, Clone, Deserialize)]
 pub struct GeneratedPower {
     #[serde(deserialize_with = "parse_power_kw")]
+    pub power: Power,
+}
+
+/// Generated power in W
+#[derive(Debug, Clone, Deserialize)]
+pub struct GeneratedPowerW {
+    #[serde(deserialize_with = "parse_power_w")]
     pub power: Power,
 }
 
@@ -372,6 +379,15 @@ where
 {
     let value: f64 = f64::deserialize(deserializer)?;
     Ok(Power::new::<kilowatt>(value))
+}
+
+// parse a float value that the API returned to a [`Power`] value. Assumes the value is in watt
+fn parse_power_w<'de, D>(deserializer: D) -> Result<Power, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: f64 = f64::deserialize(deserializer)?;
+    Ok(Power::new::<watt>(value))
 }
 
 // parse a float value that the API returned to a [`Energy`] value. Assumes the value is in watt-hours

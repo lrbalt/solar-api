@@ -13,11 +13,11 @@ let next_update = last_updated_datetime + Duration::seconds(15 * 60 + 10);
 
 There is a convenience method to help with this:
 ```rust
-    let site_overview: Overview = overview(api_key, site_id);
-    let (next_update, duration_from_now) = site_overview.estimated_next_update();
+let site_overview: Overview = overview(api_key, site_id);
+let (next_update, duration_from_now) = site_overview.estimated_next_update();
 
-    // wait duration_from_now or set timeout at next_update before 
-    // getting power or energy data
+// wait duration_from_now or set timeout at next_update before 
+// getting power or energy data
 ```
 
 # Using the example in this crate
