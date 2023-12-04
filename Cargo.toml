@@ -2,7 +2,7 @@
 authors = ["Reinier Balt <lrbalt@gmail.com>"]
 edition = "2021"
 name = "solar-api"
-version = "0.1.1"
+version = "0.1.2"
 description = "Rust library for accessing the SolarEdge Monitoring API"
 repository = "https://github.com/lrbalt/solar-api"
 documentation = "https://docs.rs/solar-api"

@@ -8,19 +8,29 @@
 //! Please be aware that the API is rate limited, i.e. it will block requests after reaching a maximum of requests in an hour. It will be available again after that hour. Also note that the measurements seem to be limited to one per fifteen minutes. You can consider scheduling a read of data ±15 minutes after the timestamp of last read measurement. For example you can use a duration of 15m 10s:
 //!
 //! ```rust
-//! # use chrono::{Duration, Local};
-//! # let last_updated_datetime = Local::now();
 //! let next_update = last_updated_datetime + Duration::seconds(15 * 60 + 10);
 //! ```
 //!
 //! There is a convenience method to help with this:
-//! ```ignore
+//!
+//! ```rust
+//! let site_overview: Overview = overview(api_key, site_id);
+//! let (next_update, duration_from_now) = site_overview.estimated_next_update();
+//! ```
+//!
+//! Please note that sometimes the API is a bit later. The `duration_from_now` can be negative then and you have to wait a bit more like in the example below. Please note that `checked_add` is needed here to handle adding negative `duration_from_now`.
+//!
+//! ```rust
 //! let site_overview: Overview = overview(api_key, site_id);
 //! let (next_update, duration_from_now) = site_overview.estimated_next_update();
 //!
-//! // wait duration_from_now or set timeout at next_update before
+//! let next = Instant::now()
+//!     .checked_add(Duration::from_secs(duration_from_now as u64))
+//!     .unwrap_or(Instant::now() + Duration::from_secs(30));
+//!
+//! // wait next or set timeout at next_update before 
 //! // getting power or energy data
-//! ```
+// ```
 
 mod site;
 

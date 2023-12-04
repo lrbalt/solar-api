@@ -64,20 +64,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         start_date: now.date(),
         end_date: now.date(),
     };
-    let time_unit = TimeUnit::Hour;
-    let energy = energy(api_key, site_id, period, time_unit)?;
+    let energy = energy(api_key, site_id, period, TimeUnit::Hour)?;
     for e in energy.values() {
         println!(
             "\t{} - {}",
             e.date,
             e.value
                 .map(|v| format!(
-                    "{}",
+                    "{:7.2}",
                     v.into_format_args(watt_hour, DisplayStyle::Abbreviation)
                 ))
-                .unwrap_or_else(|| "No value".to_string())
+                .unwrap_or_else(|| "     No value".to_string())
         );
     }
+
     println!("Getting power generation of past hour");
     let now = Local::now().naive_local();
     let power = power(api_key, site_id, now - Duration::hours(1), now)?;
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             "\t{} - {}",
             e.date,
             e.value
-                .map(|v| format!("{}", v.into_format_args(watt, DisplayStyle::Description)))
+                .map(|v| format!("{:7.2}", v.into_format_args(watt, DisplayStyle::Description)))
                 .unwrap_or_else(|| "No value".to_string())
         );
     }

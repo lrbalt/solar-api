@@ -504,7 +504,7 @@ fn test_overview() {
         parsed.overview.life_time_data.energy
     );
     assert_eq!(
-        Power::new::<kilowatt>(1173.7279),
+        Power::new::<watt>(1173.7279),
         parsed.overview.current_power.power
     );
 }
